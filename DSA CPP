@@ -1,0 +1,121 @@
+#include <iostream>
+#include <map>
+#include <queue>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Book class
+class Book {
+public:
+    int id;
+    string title;
+    string author;
+    int copies;
+
+    Book(int id, string title, string author, int copies)
+        : id(id), title(title), author(author), copies(copies) {}
+};
+
+// Binary Search Function
+int binarySearchByTitle(vector<Book> &books, string title) {
+    int left = 0, right = books.size() - 1;
+    while (left <= right) {
+        int mid = (left + right) / 2;
+        if (books[mid].title == title)
+            return mid;
+        else if (books[mid].title < title)
+            left = mid + 1;
+        else
+            right = mid - 1;
+    }
+    return -1;
+}
+
+// Merge Sort Function (by title)
+void merge(vector<Book> &arr, int left, int mid, int right) {
+    vector<Book> leftArr(arr.begin() + left, arr.begin() + mid + 1);
+    vector<Book> rightArr(arr.begin() + mid + 1, arr.begin() + right + 1);
+
+    int l = 0, r = 0, k = left;
+    while (l < leftArr.size() && r < rightArr.size()) {
+        if (leftArr[l].title < rightArr[r].title)
+            arr[k++] = leftArr[l++];
+        else
+            arr[k++] = rightArr[r++];
+    }
+
+    while (l < leftArr.size()) arr[k++] = leftArr[l++];
+    while (r < rightArr.size()) arr[k++] = rightArr[r++];
+}
+
+void mergeSort(vector<Book> &arr, int left, int right) {
+    if (left < right) {
+        int mid = (left + right) / 2;
+        mergeSort(arr, left, mid);
+        mergeSort(arr, mid + 1, right);
+        merge(arr, left, mid, right);
+    }
+}
+
+// Main Library Logic
+class Library {
+private:
+    map<int, Book> inventory;
+    queue<string> transactionLog;
+
+public:
+    void addBook(Book b) {
+        inventory[b.id] = b;
+        transactionLog.push("Added book: " + b.title);
+    }
+
+    void viewSortedBooks() {
+        vector<Book> books;
+        for (auto &entry : inventory) books.push_back(entry.second);
+
+        mergeSort(books, 0, books.size() - 1);
+
+        cout << "\nSorted Book List:\n";
+        for (auto &b : books) {
+            cout << b.id << ": " << b.title << " by " << b.author << " (Copies: " << b.copies << ")\n";
+        }
+    }
+
+    void searchBook(string title) {
+        vector<Book> books;
+        for (auto &entry : inventory) books.push_back(entry.second);
+        mergeSort(books, 0, books.size() - 1);
+
+        int index = binarySearchByTitle(books, title);
+        if (index != -1) {
+            cout << "Book found: " << books[index].title << " by " << books[index].author << endl;
+        } else {
+            cout << "Book not found.\n";
+        }
+    }
+
+    void showTransactions() {
+        queue<string> copy = transactionLog;
+        cout << "\nTransactions:\n";
+        while (!copy.empty()) {
+            cout << copy.front() << endl;
+            copy.pop();
+        }
+    }
+};
+
+int main() {
+    Library lib;
+    lib.addBook(Book(1, "Algorithms", "CLRS", 5));
+    lib.addBook(Book(2, "Data Structures", "Sahni", 3));
+    lib.addBook(Book(3, "C++ Basics", "Stroustrup", 4));
+
+    lib.viewSortedBooks();
+    lib.searchBook("C++ Basics");
+
+    lib.showTransactions();
+
+    return 0;
+}
